@@ -1,0 +1,464 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Source+Sans+3:wght@300;400;600&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --slam-black: #1a1a1a; --slam-white: #ffffff; --slam-cream: #f7f4ef;
+    --slam-gray: #6b6b6b; --slam-light-gray: #e8e5e0; --slam-accent: #c8102e;
+    --font-display: 'Playfair Display', Georgia, serif;
+    --font-body: 'Source Sans 3', 'Helvetica Neue', sans-serif;
+  }
+  #slam-root { font-family: var(--font-body); color: var(--slam-black); background: var(--slam-white); font-size: 16px; line-height: 1.6; }
+  .slam-nav { border-bottom: 1px solid var(--slam-black); padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 60px; background: var(--slam-white); position: sticky; top: 0; z-index: 100; }
+  .slam-logo { font-family: var(--font-body); font-weight: 600; font-size: 13px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--slam-black); text-decoration: none; }
+  .slam-nav-links { display: flex; gap: 2rem; list-style: none; }
+  .slam-nav-links a { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--slam-black); text-decoration: none; font-weight: 400; opacity: 0.7; }
+  .slam-nav-links a.active { opacity: 1; font-weight: 600; }
+  .breadcrumb { padding: 0.75rem 2rem; border-bottom: 1px solid var(--slam-light-gray); font-size: 12px; color: var(--slam-gray); letter-spacing: 0.04em; }
+  .breadcrumb span { margin: 0 0.4rem; }
+  .hero { background: var(--slam-black); color: var(--slam-white); padding: 4rem 2rem 3.5rem; position: relative; overflow: hidden; }
+  .hero::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(45deg, transparent, transparent 40px, rgba(255,255,255,0.015) 40px, rgba(255,255,255,0.015) 41px); pointer-events: none; }
+  .hero-label { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--slam-accent); font-weight: 600; margin-bottom: 1rem; }
+  .hero h1 { font-family: var(--font-display); font-size: clamp(2.4rem, 5vw, 4.5rem); font-weight: 400; line-height: 1.05; margin-bottom: 1.25rem; max-width: 700px; }
+  .hero h1 em { font-style: italic; color: rgba(255,255,255,0.6); }
+  .hero-sub { font-size: 1rem; font-weight: 300; color: rgba(255,255,255,0.75); max-width: 520px; line-height: 1.7; margin-bottom: 2rem; }
+  .hero-meta { display: flex; gap: 2.5rem; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.45); border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1.25rem; flex-wrap: wrap; }
+  .hero-meta strong { color: rgba(255,255,255,0.85); display: block; font-size: 13px; text-transform: none; letter-spacing: 0; margin-bottom: 2px; font-weight: 400; }
+  .page-body { display: grid; grid-template-columns: 1fr 320px; border-top: 1px solid var(--slam-light-gray); }
+  .game-section { border-right: 1px solid var(--slam-light-gray); padding: 2rem; }
+  .section-label { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--slam-gray); margin-bottom: 1.25rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--slam-light-gray); }
+  #game-wrapper { background: #0e0e0e; position: relative; height: 460px; overflow: hidden; }
+  #start-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(10,10,10,0.94); z-index: 50; transition: opacity 0.5s; }
+  #start-overlay h2 { font-family: var(--font-display); color: white; font-size: 1.9rem; font-weight: 400; margin-bottom: 0.4rem; }
+  #start-overlay p { color: rgba(255,255,255,0.45); font-size: 0.8rem; margin-bottom: 1.5rem; letter-spacing: 0.06em; text-transform: uppercase; }
+  .start-choice-row { display: flex; gap: 0.85rem; margin-bottom: 1.75rem; flex-wrap: wrap; justify-content: center; padding: 0 1rem; }
+  .artwork-choice { border: 1px solid rgba(255,255,255,0.18); padding: 0.9rem 1rem; text-align: center; cursor: pointer; transition: all 0.2s; width: 128px; background: rgba(255,255,255,0.03); }
+  .artwork-choice:hover { border-color: var(--slam-accent); background: rgba(200,16,46,0.08); }
+  .artwork-choice.selected { border-color: var(--slam-accent); background: rgba(200,16,46,0.15); }
+  .artwork-choice .obj-icon { font-size: 1.9rem; margin-bottom: 0.4rem; }
+  .artwork-choice .obj-name { font-size: 11px; color: white; letter-spacing: 0.04em; margin-bottom: 0.2rem; }
+  .artwork-choice .obj-stats { font-size: 10px; color: rgba(255,255,255,0.38); }
+  .begin-btn { background: var(--slam-accent); color: white; border: none; padding: 0.7rem 2rem; font-family: var(--font-body); font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: background 0.2s; }
+  .begin-btn:hover { background: #a50d25; }
+  #heist-canvas { display: block; cursor: default; }
+  #hud { position: absolute; top: 0; left: 0; right: 0; display: none; justify-content: space-between; align-items: center; padding: 0.55rem 1rem; background: rgba(0,0,0,0.72); z-index: 10; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.55); }
+  #hud.visible { display: flex; }
+  #hud .timer { color: white; font-size: 1rem; font-family: var(--font-display); font-weight: 400; }
+  #hud .timer.urgent { color: var(--slam-accent); }
+  #carrying-badge { display: none; position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); background: rgba(200,16,46,0.9); color: white; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 14px; z-index: 20; white-space: nowrap; }
+  #carrying-badge.visible { display: block; }
+  #result-overlay { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 60; padding: 1.5rem 2rem; text-align: center; overflow-y: auto; }
+  #result-overlay.show { display: flex; }
+  #result-overlay.win-state { background: rgba(245,242,235,0.98); }
+  #result-overlay.lose-state { background: rgba(10,10,10,0.96); }
+  .result-label { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 0.6rem; }
+  .win-state .result-label { color: var(--slam-gray); } .lose-state .result-label { color: rgba(255,255,255,0.4); }
+  .result-artwork-reveal { width: 120px; height: 120px; object-fit: cover; margin-bottom: 0.75rem; border: 2px solid var(--slam-light-gray); }
+  .result-artwork-icon { font-size: 3rem; margin-bottom: 0.75rem; }
+  .result-title { font-family: var(--font-display); font-size: 1.4rem; font-weight: 400; margin-bottom: 0.3rem; line-height: 1.2; }
+  .win-state .result-title { color: var(--slam-black); } .lose-state .result-title { color: white; }
+  .result-subtitle { font-size: 0.78rem; letter-spacing: 0.04em; margin-bottom: 0.75rem; }
+  .win-state .result-subtitle { color: var(--slam-gray); } .lose-state .result-subtitle { display: none; }
+  .result-quote { font-size: 0.85rem; font-style: italic; max-width: 360px; line-height: 1.6; margin-bottom: 1rem; }
+  .win-state .result-quote { color: var(--slam-gray); } .lose-state .result-quote { color: rgba(255,255,255,0.45); }
+  .result-fact { font-size: 0.74rem; max-width: 340px; line-height: 1.65; margin-bottom: 1.25rem; padding: 0.75rem 1rem; }
+  .win-state .result-fact { background: var(--slam-light-gray); color: var(--slam-black); border-left: 2px solid var(--slam-accent); text-align: left; }
+  .lose-state .result-fact { border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); }
+  .result-time { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 1.1rem; }
+  .win-state .result-time { color: var(--slam-gray); } .lose-state .result-time { color: rgba(255,255,255,0.3); }
+  .replay-btn { background: transparent; border: 1px solid currentColor; padding: 0.55rem 1.6rem; font-family: var(--font-body); font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+  .win-state .replay-btn { color: var(--slam-black); } .lose-state .replay-btn { color: white; }
+  .replay-btn:hover { background: var(--slam-accent); border-color: var(--slam-accent); color: white; }
+  .sidebar { padding: 2rem 1.5rem; }
+  .sidebar-section { margin-bottom: 1.75rem; padding-bottom: 1.75rem; border-bottom: 1px solid var(--slam-light-gray); }
+  .sidebar-section:last-child { border-bottom: none; }
+  .sidebar h3 { font-family: var(--font-display); font-size: 1rem; font-weight: 400; margin-bottom: 0.65rem; line-height: 1.3; }
+  .sidebar p { font-size: 0.8rem; color: var(--slam-gray); line-height: 1.65; }
+  .controls-list { list-style: none; }
+  .controls-list li { display: flex; align-items: center; gap: 0.75rem; font-size: 0.78rem; color: var(--slam-gray); padding: 0.4rem 0; border-bottom: 1px solid var(--slam-light-gray); }
+  .controls-list li:last-child { border-bottom: none; }
+  .key { background: var(--slam-black); color: white; font-size: 9px; font-weight: 600; letter-spacing: 0.05em; padding: 2px 7px; min-width: 30px; text-align: center; flex-shrink: 0; }
+  .diff-row { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+  .diff-pill { font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 10px; border: 1px solid var(--slam-light-gray); color: var(--slam-gray); cursor: pointer; transition: all 0.2s; }
+  .diff-pill.active, .diff-pill:hover { background: var(--slam-black); color: white; border-color: var(--slam-black); }
+  .related-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--slam-light-gray); border: 1px solid var(--slam-light-gray); margin-top: 1.5rem; }
+  .related-card { background: var(--slam-white); padding: 1rem 0.9rem; cursor: pointer; transition: background 0.2s; }
+  .related-card:hover { background: var(--slam-cream); }
+  .related-card .rc-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--slam-gray); margin-bottom: 0.35rem; }
+  .related-card .rc-title { font-family: var(--font-display); font-size: 0.84rem; line-height: 1.3; color: var(--slam-black); }
+  .slam-footer { border-top: 1px solid var(--slam-black); padding: 1.75rem 2rem; display: flex; justify-content: space-between; align-items: flex-start; gap: 2rem; flex-wrap: wrap; }
+  .footer-left p { font-size: 0.76rem; color: var(--slam-gray); max-width: 380px; line-height: 1.65; }
+  .footer-right { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--slam-gray); text-align: right; }
+  .footer-right a { color: var(--slam-black); text-decoration: none; display: block; margin-bottom: 0.4rem; font-weight: 600; }
+</style>
+
+<div id="slam-root">
+  <nav class="slam-nav">
+    <a class="slam-logo" href="#">Saint Louis Art Museum</a>
+    <ul class="slam-nav-links">
+      <li><a href="#">Art</a></li><li><a href="#">Visit</a></li><li><a href="#">Events</a></li>
+      <li><a href="#" class="active">Learn</a></li><li><a href="#">Join &amp; Support</a></li>
+    </ul>
+  </nav>
+  <div class="breadcrumb">Learn <span>›</span> Interactive Experiences <span>›</span> <strong>The Heist</strong></div>
+  <header class="hero">
+    <div class="hero-label">Interactive Experience</div>
+    <h1>The Heist<br><em>Can you take it?</em></h1>
+    <p class="hero-sub">Steal a work of art from this museum. Then face what you've done. A playable experience about the cultural weight of objects and the history they carry.</p>
+    <div class="hero-meta">
+      <div><strong>Duration</strong> 2–5 minutes</div>
+      <div><strong>Age</strong> All audiences</div>
+      <div><strong>Access</strong> Free, no login required</div>
+      <div><strong>Part of</strong> SLAM Digital Learning Series</div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <div class="game-section">
+      <div class="section-label">Play the Experience</div>
+      <div id="game-wrapper">
+        <div id="start-overlay">
+          <h2>Choose Your Target</h2>
+          <p>Reach it. Carry it back. Don't get caught.</p>
+          <div class="start-choice-row">
+            <div class="artwork-choice selected" data-art="0" onclick="selectArt(0)">
+              <div class="obj-icon">🗿</div><div class="obj-name">Ceremonial Mask</div><div class="obj-stats">Easy · 1 guard</div>
+            </div>
+            <div class="artwork-choice" data-art="1" onclick="selectArt(1)">
+              <div class="obj-icon">🏺</div><div class="obj-name">Ancient Vessel</div><div class="obj-stats">Medium · 2 guards</div>
+            </div>
+            <div class="artwork-choice" data-art="2" onclick="selectArt(2)">
+              <div class="obj-icon">🖼️</div><div class="obj-name">Oil Painting</div><div class="obj-stats">Hard · 3 guards</div>
+            </div>
+          </div>
+          <button class="begin-btn" onclick="startGame()">Begin — 30 seconds</button>
+        </div>
+        <canvas id="heist-canvas" width="820" height="460"></canvas>
+        <div id="hud">
+          <div id="hud-art">Target: —</div>
+          <div class="timer" id="timer-display">0:30</div>
+          <div id="hud-state">Reach the artwork</div>
+        </div>
+        <div id="carrying-badge">Carrying — get to the exit!</div>
+        <div id="result-overlay">
+          <div class="result-label" id="result-label">—</div>
+          <img class="result-artwork-reveal" id="result-img" src="" alt="" style="display:none;" />
+          <div class="result-artwork-icon" id="result-icon"></div>
+          <div class="result-title" id="result-title">—</div>
+          <div class="result-subtitle" id="result-subtitle">—</div>
+          <div class="result-quote" id="result-quote">—</div>
+          <div class="result-fact" id="result-fact">—</div>
+          <div class="result-time" id="result-time">—</div>
+          <button class="replay-btn" onclick="resetGame()">Try Again</button>
+        </div>
+      </div>
+      <div class="related-grid">
+        <div class="related-card"><div class="rc-label">Collection</div><div class="rc-title">Explore Objects Like These</div></div>
+        <div class="related-card"><div class="rc-label">Article</div><div class="rc-title">The Ethics of Museum Acquisition</div></div>
+        <div class="related-card"><div class="rc-label">Event</div><div class="rc-title">Free Friday: Art &amp; Identity</div></div>
+        <div class="related-card"><div class="rc-label">For Teachers</div><div class="rc-title">Classroom Guide: Cultural Property</div></div>
+      </div>
+    </div>
+
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="section-label">Controls</div>
+        <ul class="controls-list">
+          <li><span class="key">W</span> Move up</li>
+          <li><span class="key">A</span> Move left</li>
+          <li><span class="key">S</span> Move down</li>
+          <li><span class="key">D</span> Move right</li>
+        </ul>
+      </div>
+      <div class="sidebar-section">
+        <div class="section-label">How to Play</div>
+        <h3>How to Steal 101</h3>
+        <p>Walk to the target to pick it up automatically. Then navigate back to the exit without being caught by a guard or entering a camera's cone of vision.</p>
+      </div>
+      <div class="sidebar-section">
+        <div class="section-label">Difficulty</div>
+        <p style="font-size:0.76rem; color: var(--slam-gray); margin-bottom: 0.5rem;">Guards move faster and see further. Hard adds one extra guard.</p>
+        <div class="diff-row">
+          <div class="diff-pill active" onclick="setDiff(this,'easy')">Normal</div>
+          <div class="diff-pill" onclick="setDiff(this,'medium')">Intense</div>
+          <div class="diff-pill" onclick="setDiff(this,'hard')">Impossible</div>
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="section-label">About</div>
+        <p>Each artwork carries centuries of survival, meaning, and belonging. Steal it in seconds. Then read what you've taken. Part of SLAM's Digital Learning Series on cultural heritage.</p>
+      </div>
+      <div class="sidebar-section">
+        <div class="section-label">Accessibility</div>
+        <p>Keyboard-navigable via WASD. Contact <strong>learn@slam.org</strong> for accommodations.</p>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="slam-footer">
+    <div class="footer-left">
+      <div style="font-weight:600; font-size:13px; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.5rem;">Saint Louis Art Museum</div>
+      <p>One Fine Arts Drive, Forest Park, St. Louis, Missouri 63110 · 314.721.0072 · Admission is always free.</p>
+    </div>
+    <div class="footer-right">
+      <a href="#">Visit the Museum</a>
+      <span>Terms of Use · Privacy Policy</span>
+    </div>
+  </footer>
+</div>
+
+<script>
+const W = 820, H = 460;
+const HUD_H = 32, FLOOR_Y = HUD_H + 8;
+const GUARD_CONE = { easy:{range:90,fov:Math.PI/3}, medium:{range:110,fov:Math.PI/2.5}, hard:{range:130,fov:Math.PI/2} };
+
+const ARTWORKS = [
+  { name:'Ceremonial Mask', icon:'🗿', baseGuards:1, color:'#3a2a1a',
+    levels:{
+      easy:  {title:'Malagan Mask with Bird on Head',subtitle:'Northern New Ireland, c. 19th century',img:'mask(easy).jpg',quote:'"You stole this in {t} seconds. It was carved to be destroyed — never kept."',fact:'Malagan objects from New Ireland (Papua New Guinea) were traditionally created for a single mortuary ceremony, then left to decay or destroyed. Their presence in any museum collection is a profound disruption of their intended purpose.'},
+      medium:{title:'Helmet Mask (ndoli jowei)',subtitle:'Mende, Sande Society, Liberia/Sierra Leone, 20th century',img:'mask(medium).jpg',quote:'"You stole this in {t} seconds. It belongs to the women who wore it."',fact:'The Sande Society helmet mask is the only known African masquerade tradition performed exclusively by women. It embodies the guardian spirit of the society and represents women\'s political and spiritual power in Mende communities.'},
+      hard:  {title:'Dzunukwa Mask',subtitle:'Kwakwaka\'wakw artist, Alert Bay, British Columbia, c. 1967',img:'mask(hard).jpg',quote:'"You stole this in {t} seconds. It carries a name, a ceremony, a people."',fact:'This mask portrays Dzunukwa, a forest giant of Kwakwaka\'wakw oral tradition. Purchased in 1967 from Alert Bay during a period when Indigenous ceremonial practices faced severe legal restriction in Canada, its removal severed it from the potlatch tradition it was made for.'}
+    }
+  },
+  { name:'Ancient Vessel', icon:'🏺', baseGuards:2, color:'#4a3520',
+    levels:{
+      easy:  {title:'Cinerary Urn',subtitle:'Roman, 1st–2nd century CE',img:'amphora(easy).jpg',quote:'"You stole this in {t} seconds. It was made to hold the dead."',fact:'This marble urn was created to hold the cremated remains of a Roman citizen. Decorated with garlands and ritual candleholders, it was a vessel of grief and memory — not meant to sit behind glass, but to be buried with the ashes of someone loved.'},
+      medium:{title:'Amphora with Nike and Youth',subtitle:'Greek (Attic), c. 460–450 BCE',img:'amphora(medium).jpg',quote:'"You stole this in {t} seconds. It took 2,500 years to survive."',fact:'This red-figure amphora depicting Nike, the goddess of victory, passed through Rome\'s Vatican collection by 1775. SLAM purchased it in 1955. Its early ownership history remains only partially documented.'},
+      hard:  {title:'Covered Wine Vessel (fang lei)',subtitle:'Chinese, Western Zhou dynasty, c. 11th century BCE',img:'amphora(hard).jpg',quote:'"You stole this in {t} seconds. It was cast for a king 3,000 years ago."',fact:'Reportedly excavated in Shaanxi province, China in 1927, this ritual bronze entered the Western art market through Paris dealer C.T. Loo and was purchased by SLAM in 1941. China considers objects like this national patrimony.'}
+    }
+  },
+  { name:'Oil Painting', icon:'🖼️', baseGuards:3, color:'#2a3040',
+    levels:{
+      easy:  {title:'Portrait of a Lady',subtitle:'Hans Mielich, German, 1540–41',img:'painting(easy).jpg',quote:'"You stole this in {t} seconds. The Nazis stole it first."',fact:'This portrait was confiscated from Julius and Camilla Priester by the Nazi government in Vienna on November 4, 1938. Recovered from the Altaussee salt mines by the Monuments Men, it passed through heirs across two continents before being donated to SLAM in 2006.'},
+      medium:{title:'Christ and the Woman Taken in Adultery',subtitle:'Max Beckmann, German, 1917',img:'painting(medium).jpg',quote:'"You stole this in {t} seconds. The Nazis called it degenerate."',fact:'Beckmann painted this during World War I. In 1937 the Nazi regime seized it as "degenerate art." It reached SLAM through a New York dealer who specialized in Nazi confiscations. Beckmann later fled Germany and died in New York in 1950.'},
+      hard:  {title:'Bathers with a Turtle',subtitle:'Henri Matisse, French, 1907–08',img:'painting(hard).jpg',quote:'"You stole this in {t} seconds. It almost didn\'t survive the 20th century."',fact:'The Nazis confiscated this from Germany\'s Museum Folkwang in 1937. In 1939 Joseph Pulitzer Jr. purchased it for $2,400 at the Nazi\'s Lucerne "degenerate art" auction to save it from destruction. SLAM\'s curator calls it "our Mona Lisa."'}
+    }
+  }
+];
+
+let selectedArt=0, difficulty='easy', gameState='idle', carrying=false;
+let timeLeft=30, startTime=0, timerInterval=null, animFrame=null;
+let keys={}, player, artTarget, guards, cams;
+const imgCache={};
+
+function preloadImages() {
+  ARTWORKS.forEach(art => Object.values(art.levels).forEach(lvl => {
+    if (!imgCache[lvl.img]) { const i=new Image(); i.src=lvl.img; imgCache[lvl.img]=i; }
+  }));
+}
+preloadImages();
+
+function rnd(min,max){return Math.random()*(max-min)+min;}
+function selectArt(i){selectedArt=i;document.querySelectorAll('.artwork-choice').forEach((el,idx)=>el.classList.toggle('selected',idx===i));}
+function setDiff(el,d){difficulty=d;document.querySelectorAll('.diff-pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');}
+function guardSpeed(){return difficulty==='hard'?2.6:difficulty==='medium'?1.9:1.3;}
+
+function buildGuards(){
+  const sp=guardSpeed(), count=ARTWORKS[selectedArt].baseGuards+(difficulty==='hard'?1:0);
+  const t=[
+    {x:340,y:210,w:14,h:20,dx:sp,dy:0,bx:[180,640],by:[FLOOR_Y,H-20],mode:'h'},
+    {x:600,y:140,w:14,h:20,dx:0,dy:sp*0.85,bx:[420,760],by:[FLOOR_Y,H-20],mode:'v'},
+    {x:460,y:280,w:14,h:20,dx:sp*0.75,dy:sp*0.75,bx:[240,740],by:[FLOOR_Y,H-20],mode:'d'},
+    {x:280,y:320,w:14,h:20,dx:-sp*0.9,dy:0,bx:[100,560],by:[FLOOR_Y,H-20],mode:'h'},
+  ];
+  guards=t.slice(0,count).map(g=>({...g}));
+}
+
+function buildCams(){
+  const topX=Math.round(rnd(120,W-80));
+  let botX; do{botX=Math.round(rnd(120,W-80));}while(Math.abs(botX-topX)<150);
+  cams=[
+    {x:topX,y:FLOOR_Y,angle:Math.PI/2,sweep:0,dir:(Math.random()<0.5?1:-1),fov:Math.PI/3,side:'top'},
+    {x:botX,y:H,angle:-Math.PI/2,sweep:0,dir:(Math.random()<0.5?1:-1),fov:Math.PI/3,side:'bottom'},
+  ];
+}
+
+function startGame(){
+  gameState='playing'; carrying=false;
+  const ov=document.getElementById('start-overlay');
+  ov.style.opacity='0'; ov.style.pointerEvents='none';
+  document.getElementById('hud').classList.add('visible');
+  document.getElementById('carrying-badge').classList.remove('visible');
+  document.getElementById('hud-art').textContent='Target: '+ARTWORKS[selectedArt].name;
+  document.getElementById('hud-state').textContent='Reach the artwork';
+  player={x:28,y:H/2-13,w:18,h:26};
+  artTarget={x:670,y:H/2-22,w:36,h:44,collected:false};
+  buildGuards(); buildCams();
+  timeLeft=30; startTime=Date.now();
+  updateTimerDisplay();
+  timerInterval=setInterval(tick,1000);
+  requestAnimationFrame(render);
+}
+
+function tick(){if(gameState!=='playing')return;timeLeft--;updateTimerDisplay();if(timeLeft<=0)lose('time');}
+
+function updateTimerDisplay(){
+  const el=document.getElementById('timer-display');
+  el.textContent='0:'+String(Math.max(0,timeLeft)).padStart(2,'0');
+  el.classList.toggle('urgent',timeLeft<=8);
+}
+
+function lose(reason){
+  if(gameState!=='playing')return;
+  gameState='lost'; clearInterval(timerInterval); cancelAnimationFrame(animFrame);
+  const elapsed=((Date.now()-startTime)/1000).toFixed(1);
+  const msgs={time:'Time ran out.',guard:'Spotted by a guard.',camera:'Seen on camera.'};
+  showResult(false,msgs[reason]||'Caught.',elapsed);
+}
+
+function win(){
+  if(gameState!=='playing')return;
+  gameState='won'; clearInterval(timerInterval); cancelAnimationFrame(animFrame);
+  showResult(true,'',((Date.now()-startTime)/1000).toFixed(1));
+}
+
+function triggerPickup(){
+  if(gameState!=='playing'||artTarget.collected)return;
+  artTarget.collected=true; carrying=true;
+  document.getElementById('carrying-badge').classList.add('visible');
+  document.getElementById('hud-state').textContent='Get to the exit!';
+  player.x=10;
+}
+
+function showResult(isWin,loseMsg,elapsed){
+  const art=ARTWORKS[selectedArt], lvl=art.levels[difficulty];
+  const ov=document.getElementById('result-overlay');
+  ov.className='show '+(isWin?'win-state':'lose-state');
+  const imgEl=document.getElementById('result-img'), iconEl=document.getElementById('result-icon');
+  if(isWin){
+    imgEl.src=lvl.img; imgEl.alt=lvl.title; imgEl.style.display='block';
+    iconEl.textContent='';
+    document.getElementById('result-subtitle').textContent=lvl.subtitle;
+  } else {
+    imgEl.style.display='none'; iconEl.textContent=art.icon;
+    document.getElementById('result-subtitle').textContent='';
+  }
+  document.getElementById('result-label').textContent=isWin?'You took it.':'You were stopped.';
+  document.getElementById('result-title').textContent=isWin?lvl.title:loseMsg;
+  document.getElementById('result-quote').textContent=isWin?lvl.quote.replace('{t}',elapsed):'The artwork remains. For now.';
+  document.getElementById('result-fact').textContent=isWin?lvl.fact:art.levels[difficulty].fact;
+  document.getElementById('result-time').textContent=isWin
+    ?('Escaped in '+elapsed+' seconds · '+lvl.subtitle.split(',').pop().trim())
+    :(elapsed+' seconds into the attempt');
+}
+
+function resetGame(){
+  gameState='idle'; carrying=false;
+  clearInterval(timerInterval); cancelAnimationFrame(animFrame);
+  document.getElementById('result-overlay').className='';
+  const ov=document.getElementById('start-overlay');
+  ov.style.opacity='1'; ov.style.pointerEvents='auto';
+  document.getElementById('hud').classList.remove('visible');
+  document.getElementById('carrying-badge').classList.remove('visible');
+  timeLeft=30; updateTimerDisplay();
+  document.getElementById('heist-canvas').getContext('2d').clearRect(0,0,W,H);
+}
+
+function inCone(ox,oy,fa,fov,range,px,py){
+  const dx=px-ox,dy=py-oy,dist=Math.sqrt(dx*dx+dy*dy);
+  if(dist>range)return false;
+  let d=Math.atan2(dy,dx)-fa;
+  while(d>Math.PI)d-=2*Math.PI; while(d<-Math.PI)d+=2*Math.PI;
+  return Math.abs(d)<fov/2;
+}
+function guardFacingAngle(g){return Math.atan2(g.mode==='h'?0:(g.dy||0),g.mode==='v'?0:(g.dx||1));}
+
+function drawArtTarget(ctx){
+  if(artTarget.collected)return;
+  const art=ARTWORKS[selectedArt],lvl=art.levels[difficulty],ci=imgCache[lvl.img];
+  ctx.strokeStyle='#5a4a28'; ctx.lineWidth=3;
+  ctx.strokeRect(artTarget.x-5,artTarget.y-5,artTarget.w+10,artTarget.h+10);
+  if(ci&&ci.complete&&ci.naturalWidth>0){ctx.drawImage(ci,artTarget.x,artTarget.y,artTarget.w,artTarget.h);}
+  else{ctx.fillStyle=art.color;ctx.fillRect(artTarget.x,artTarget.y,artTarget.w,artTarget.h);ctx.font='22px serif';ctx.textAlign='center';ctx.fillText(art.icon,artTarget.x+artTarget.w/2,artTarget.y+artTarget.h/2+8);}
+  const pulse=0.25+0.25*Math.sin(Date.now()/380);
+  ctx.strokeStyle=`rgba(200,16,46,${pulse})`; ctx.lineWidth=2;
+  ctx.strokeRect(artTarget.x-8,artTarget.y-8,artTarget.w+16,artTarget.h+16);
+}
+
+// Click directly on the artwork sprite to instantly steal it (no player movement required)
+document.getElementById('heist-canvas').addEventListener('click', e => {
+  if (gameState !== 'playing' || artTarget.collected) return;
+  const rect = e.target.getBoundingClientRect();
+  const scaleX = W / rect.width, scaleY = H / rect.height;
+  const cx = (e.clientX - rect.left) * scaleX;
+  const cy = (e.clientY - rect.top)  * scaleY;
+  const pad = 10;
+  if (cx >= artTarget.x - pad && cx <= artTarget.x + artTarget.w + pad &&
+      cy >= artTarget.y - pad && cy <= artTarget.y + artTarget.h + pad) {
+    triggerPickup();
+  }
+});
+
+document.getElementById('heist-canvas').addEventListener('mousemove', e => {
+  if (gameState !== 'playing' || artTarget.collected) { e.target.style.cursor='default'; return; }
+  const rect = e.target.getBoundingClientRect();
+  const cx = (e.clientX - rect.left) * (W / rect.width);
+  const cy = (e.clientY - rect.top)  * (H / rect.height);
+  const pad = 10;
+  e.target.style.cursor = (cx >= artTarget.x-pad && cx <= artTarget.x+artTarget.w+pad &&
+                            cy >= artTarget.y-pad && cy <= artTarget.y+artTarget.h+pad)
+    ? 'pointer' : 'default';
+});
+
+function render(){
+  if(gameState!=='playing')return;
+  animFrame=requestAnimationFrame(render);
+  const ctx=document.getElementById('heist-canvas').getContext('2d');
+  const spd=(difficulty==='hard'?3.0:difficulty==='medium'?2.6:2.2)*(carrying?0.72:1);
+  if(keys['w']||keys['W'])player.y-=spd; if(keys['s']||keys['S'])player.y+=spd;
+  if(keys['a']||keys['A'])player.x-=spd; if(keys['d']||keys['D'])player.x+=spd;
+  player.x=Math.max(0,Math.min(W-player.w,player.x)); player.y=Math.max(FLOOR_Y,Math.min(H-player.h,player.y));
+  guards.forEach(g=>{
+    if(g.mode==='h'){g.x+=g.dx;if(g.x<g.bx[0]||g.x>g.bx[1])g.dx*=-1;}
+    else if(g.mode==='v'){g.y+=g.dy;if(g.y<g.by[0]||g.y>g.by[1])g.dy*=-1;}
+    else{g.x+=g.dx;g.y+=g.dy;if(g.x<g.bx[0]||g.x>g.bx[1])g.dx*=-1;if(g.y<g.by[0]||g.y>g.by[1])g.dy*=-1;}
+  });
+  cams.forEach(c=>{c.sweep+=0.018*c.dir;if(Math.abs(c.sweep)>0.72)c.dir*=-1;});
+  ctx.fillStyle='#111';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#1a1810';ctx.fillRect(0,FLOOR_Y,W,H-FLOOR_Y);
+  ctx.strokeStyle='rgba(255,255,255,0.025)';ctx.lineWidth=0.5;
+  for(let x=0;x<W;x+=60){ctx.beginPath();ctx.moveTo(x,FLOOR_Y);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=FLOOR_Y;y<H;y+=60){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  ctx.fillStyle='#222018';ctx.fillRect(0,FLOOR_Y,W,8);
+  ctx.fillStyle='#1e1d14';for(let i=0;i<6;i++)ctx.fillRect(100+i*130,FLOOR_Y,18,H-FLOOR_Y);
+  ctx.fillStyle='rgba(80,200,100,0.07)';ctx.fillRect(0,FLOOR_Y,58,H-FLOOR_Y);
+  ctx.strokeStyle='rgba(80,200,100,0.35)';ctx.lineWidth=1;
+  ctx.setLineDash([4,4]);ctx.strokeRect(1,FLOOR_Y+1,56,H-FLOOR_Y-2);ctx.setLineDash([]);
+  ctx.fillStyle='rgba(80,200,100,0.55)';ctx.font='9px sans-serif';ctx.textAlign='center';
+  ctx.fillText('EXIT',29,H/2-4);ctx.fillText('←',29,H/2+8);
+  drawArtTarget(ctx);
+  const cone=GUARD_CONE[difficulty],px=player.x+player.w/2,py=player.y+player.h/2;
+  cams.forEach(c=>{
+    const base=c.angle+c.sweep;
+    ctx.save();ctx.beginPath();ctx.moveTo(c.x,c.y);ctx.arc(c.x,c.y,155,base-c.fov/2,base+c.fov/2);ctx.closePath();
+    ctx.fillStyle='rgba(255,215,50,0.07)';ctx.fill();ctx.strokeStyle='rgba(255,215,50,0.22)';ctx.lineWidth=0.5;ctx.stroke();ctx.restore();
+    ctx.fillStyle='#d4aa00';ctx.beginPath();ctx.arc(c.x,c.y,5,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#d4aa00';ctx.lineWidth=2;ctx.beginPath();
+    if(c.side==='top'){ctx.moveTo(c.x,c.y);ctx.lineTo(c.x,c.y+10);}else{ctx.moveTo(c.x,c.y);ctx.lineTo(c.x,c.y-10);}ctx.stroke();
+    if(inCone(c.x,c.y,base,c.fov,155,px,py))lose('camera');
+  });
+  guards.forEach(g=>{
+    const gx=g.x+g.w/2,gy=g.y+g.h/2,facing=guardFacingAngle(g);
+    ctx.save();ctx.beginPath();ctx.moveTo(gx,gy);ctx.arc(gx,gy,cone.range,facing-cone.fov/2,facing+cone.fov/2);ctx.closePath();
+    ctx.fillStyle='rgba(255,100,80,0.13)';ctx.fill();ctx.strokeStyle='rgba(255,100,80,0.35)';ctx.lineWidth=0.75;ctx.stroke();ctx.restore();
+    const spotted=inCone(gx,gy,facing,cone.fov,cone.range,px,py);
+    ctx.fillStyle=spotted?'#ff2020':'#c8102e';ctx.fillRect(g.x,g.y,g.w,g.h);
+    ctx.fillStyle=spotted?'#cc0000':'#8a0a1e';ctx.fillRect(g.x-2,g.y-5,g.w+4,6);
+    const ex=gx+Math.cos(facing)*(g.w/2+1),ey=gy+Math.sin(facing)*(g.h/2+1);
+    ctx.fillStyle='rgba(255,255,255,0.85)';ctx.beginPath();ctx.arc(ex,ey,2.5,0,Math.PI*2);ctx.fill();
+    if(spotted)lose('guard');
+  });
+  ctx.fillStyle=carrying?'#f0d080':'#e8e0d0';ctx.fillRect(player.x,player.y,player.w,player.h);
+  ctx.fillStyle=carrying?'#c8a040':'#b0a898';ctx.fillRect(player.x+3,player.y-6,player.w-6,7);
+  if(carrying){const ci=imgCache[ARTWORKS[selectedArt].levels[difficulty].img];if(ci&&ci.complete&&ci.naturalWidth>0)ctx.drawImage(ci,player.x-2,player.y-18,22,18);else{ctx.font='12px serif';ctx.textAlign='center';ctx.fillText(ARTWORKS[selectedArt].icon,player.x+player.w/2,player.y-9);}}
+  if(!artTarget.collected&&player.x<artTarget.x+artTarget.w&&player.x+player.w>artTarget.x&&player.y<artTarget.y+artTarget.h&&player.y+player.h>artTarget.y){
+    artTarget.collected=true;carrying=true;
+    document.getElementById('carrying-badge').classList.add('visible');
+    document.getElementById('hud-state').textContent='Get to the exit!';
+  }
+  if(carrying&&player.x<=58)win();
+}
+
+window.addEventListener('keydown',e=>{if(['w','a','s','d','W','A','S','D'].includes(e.key))e.preventDefault();keys[e.key]=true;});
+window.addEventListener('keyup',e=>{keys[e.key]=false;});
+</script>
